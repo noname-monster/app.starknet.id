@@ -28,7 +28,11 @@ const SelectDomain: FunctionComponent<SelectDomainProps> = ({
   useEffect(() => {
     if (account) {
       fetch(
-        `/api/indexer/addr_to_available_ids?addr=${hexToDecimal(
+        `${
+          process.env.NEXT_PUBLIC_IS_LOCAL
+            ? "https://goerli.app.starknet.id"
+            : ""
+        }/api/indexer/addr_to_available_ids?addr=${hexToDecimal(
           account.address
         )}`
       )

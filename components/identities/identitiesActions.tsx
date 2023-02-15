@@ -80,7 +80,13 @@ const IdentityActions: FunctionComponent<IdentityActionsProps> = ({
 
     if (address && tokenId) {
       // Our Indexer
-      fetch(`/api/indexer/addr_to_full_ids?addr=${hexToDecimal(address)}`)
+      fetch(
+        `${
+          process.env.NEXT_PUBLIC_IS_LOCAL
+            ? "https://goerli.app.starknet.id"
+            : ""
+        }/api/indexer/addr_to_full_ids?addr=${hexToDecimal(address)}`
+      )
         .then((response) => response.json())
         .then((data) => {
           setIsOwner(checkIfOwner(data.full_ids));
