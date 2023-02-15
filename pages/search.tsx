@@ -13,6 +13,7 @@ import { useAccount } from "@starknet-react/core";
 import { useDomainContext } from "../hooks/useDomainContext";
 import DomainList from "../components/domains/domainList";
 import Grid from "@mui/material/Grid";
+import BatchRegisterBtn from "../components/domains/batchRegisterBtn";
 
 const SearchPage: NextPage = () => {
   const router = useRouter();
@@ -79,6 +80,7 @@ const SearchPage: NextPage = () => {
               <Grid container spacing={4}>
                 <Grid item xs={5}>
                   <DomainList />
+                  <BatchRegisterBtn />
                 </Grid>
                 <Grid item xs={6}>
                   {isMenuVisible ? (

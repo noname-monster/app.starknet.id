@@ -63,7 +63,7 @@ export default function DomainList() {
                     onClick={(event) => handleListItemClick(event, index)}
                   >
                     <ListItemText
-                      primary={domain.name}
+                      primary={domain.name + ".stark"}
                       secondary={domain.duration + "years"}
                     />
                   </ListItemButton>

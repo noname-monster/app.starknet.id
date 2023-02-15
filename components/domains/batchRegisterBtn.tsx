@@ -21,22 +21,20 @@ import { useDisplayName } from "../../hooks/displayName.tsx";
 import { useDomainContext } from "../../hooks/useDomainContext";
 
 type RegisterProps = {
-  domain: string;
   isAvailable?: boolean;
 };
 
-const Register: FunctionComponent<RegisterProps> = ({
-  domain,
-  isAvailable,
-}) => {
+const BatchRegister: FunctionComponent<RegisterProps> = ({ isAvailable }) => {
+  const { domainList } = useDomainContext();
   const maxYearsToRegister = 25;
   const [targetAddress, setTargetAddress] = useState<string>("");
-  const [duration, setDuration] = useState<number>(5);
+  const [duration, setDuration] = useState<number>(1);
   const [tokenId, setTokenId] = useState<number>(0);
   const [callData, setCallData] = useState<Call[]>([]);
   const [price, setPrice] = useState<string>("0");
   const { contract } = usePricingContract();
-  const encodedDomain = useEncoded(domain);
+  const encodedDomain = useEncoded(domainList[0].name);
+
   const { data: priceData, error: priceError } = useStarknetCall({
     contract: contract,
     method: "compute_buy_price",
@@ -47,10 +45,6 @@ const Register: FunctionComponent<RegisterProps> = ({
     calls: callData as any,
   });
   const hasMainDomain = !useDisplayName(address).startsWith("0x");
-  const { domainList, setDomainList, currentDomain, setCurrentDomain } =
-    useDomainContext();
-  const isBatchRegister = domainList.length > 0;
-
   const [domainsMinting, setDomainsMinting] = useState<Map<string, boolean>>(
     new Map()
   );
@@ -67,23 +61,16 @@ const Register: FunctionComponent<RegisterProps> = ({
   }, [priceData, priceError]);
 
   useEffect(() => {
-    if (address) {
-      setTargetAddress(address);
+    if (account) {
+      setTargetAddress(account.address);
     }
-  }, [address]);
+  }, [account]);
 
   // Set mulitcalls
   useEffect(() => {
-    if (!isAvailable) return;
+    // if (!isAvailable) return;
     const newTokenId: number = Math.floor(Math.random() * 1000000000000);
-
-    console.log("targetAddress: ", targetAddress);
-
-    if (
-      tokenId != 0 &&
-      !hasMainDomain &&
-      hexToDecimal(address) === hexToDecimal(targetAddress)
-    ) {
+    if (tokenId != 0 && hasMainDomain) {
       setCallData([
         {
           contractAddress: process.env.NEXT_PUBLIC_ETHER_CONTRACT as string,
@@ -102,7 +89,30 @@ const Register: FunctionComponent<RegisterProps> = ({
             new BN(encodedDomain).toString(10),
             new BN(duration * 365).toString(10),
             0,
-            hexToDecimal(targetAddress),
+            hexToDecimal(targetAddress ?? ""),
+          ],
+        },
+      ]);
+    } else if (tokenId != 0 && !hasMainDomain) {
+      setCallData([
+        {
+          contractAddress: process.env.NEXT_PUBLIC_ETHER_CONTRACT as string,
+          entrypoint: "approve",
+          calldata: [
+            process.env.NEXT_PUBLIC_NAMING_CONTRACT as string,
+            price,
+            0,
+          ],
+        },
+        {
+          contractAddress: process.env.NEXT_PUBLIC_NAMING_CONTRACT as string,
+          entrypoint: "buy",
+          calldata: [
+            new BN(tokenId).toString(10),
+            new BN(encodedDomain).toString(10),
+            new BN(duration * 365).toString(10),
+            0,
+            hexToDecimal(targetAddress ?? ""),
           ],
         },
         {
@@ -111,39 +121,7 @@ const Register: FunctionComponent<RegisterProps> = ({
           calldata: [1, new BN(encodedDomain).toString(10)],
         },
       ]);
-    } else if (
-      (tokenId != 0 && hasMainDomain) ||
-      (tokenId != 0 &&
-        !hasMainDomain &&
-        hexToDecimal(address) != hexToDecimal(targetAddress))
-    ) {
-      setCallData([
-        {
-          contractAddress: process.env.NEXT_PUBLIC_ETHER_CONTRACT as string,
-          entrypoint: "approve",
-          calldata: [
-            process.env.NEXT_PUBLIC_NAMING_CONTRACT as string,
-            price,
-            0,
-          ],
-        },
-        {
-          contractAddress: process.env.NEXT_PUBLIC_NAMING_CONTRACT as string,
-          entrypoint: "buy",
-          calldata: [
-            new BN(tokenId).toString(10),
-            new BN(encodedDomain).toString(10),
-            new BN(duration * 365).toString(10),
-            0,
-            hexToDecimal(targetAddress),
-          ],
-        },
-      ]);
-    } else if (
-      tokenId === 0 &&
-      !hasMainDomain &&
-      hexToDecimal(address) === hexToDecimal(targetAddress)
-    ) {
+    } else if (tokenId === 0 && hasMainDomain) {
       setCallData([
         {
           contractAddress: process.env.NEXT_PUBLIC_ETHER_CONTRACT as string,
@@ -168,21 +146,11 @@ const Register: FunctionComponent<RegisterProps> = ({
             new BN(encodedDomain).toString(10),
             new BN(duration * 365).toString(10),
             0,
-            hexToDecimal(targetAddress),
+            hexToDecimal(targetAddress ?? ""),
           ],
         },
-        {
-          contractAddress: process.env.NEXT_PUBLIC_NAMING_CONTRACT as string,
-          entrypoint: "set_address_to_domain",
-          calldata: [1, new BN(encodedDomain).toString(10)],
-        },
       ]);
-    } else if (
-      (tokenId === 0 && hasMainDomain) ||
-      (tokenId === 0 &&
-        !hasMainDomain &&
-        hexToDecimal(address) != hexToDecimal(targetAddress))
-    ) {
+    } else if (tokenId === 0 && !hasMainDomain) {
       setCallData([
         {
           contractAddress: process.env.NEXT_PUBLIC_ETHER_CONTRACT as string,
@@ -207,21 +175,17 @@ const Register: FunctionComponent<RegisterProps> = ({
             new BN(encodedDomain).toString(10),
             new BN(duration * 365).toString(10),
             0,
-            hexToDecimal(targetAddress),
+            hexToDecimal(targetAddress ?? ""),
           ],
+        },
+        {
+          contractAddress: process.env.NEXT_PUBLIC_NAMING_CONTRACT as string,
+          entrypoint: "set_address_to_domain",
+          calldata: [1, new BN(encodedDomain).toString(10)],
         },
       ]);
     }
-  }, [
-    tokenId,
-    duration,
-    targetAddress,
-    isAvailable,
-    price,
-    domain,
-    hasMainDomain,
-    address,
-  ]);
+  }, [tokenId, duration, targetAddress, isAvailable, price, domainList]);
 
   function changeAddress(value: string): void {
     isHexString(value) ? setTargetAddress(value) : null;
@@ -332,71 +296,19 @@ const Register: FunctionComponent<RegisterProps> = ({
     );
   }
 
-  if (isAvailable)
+  if (!isAvailable)
     return (
       <div className="sm:w-full w-2/3">
-        <div className="flex">
-          <div className="mr-1 z-[0] w-1/2">
-            <TextField
-              fullWidth
-              label="Target address"
-              id="outlined-basic"
-              value={targetAddress ?? "0x.."}
-              variant="outlined"
-              onChange={(e) => changeAddress(e.target.value)}
-              color="secondary"
-              required
-            />
-          </div>
-          <div className="mr-1 z-[0] w-1/2">
-            <TextField
-              fullWidth
-              className="ml-1 z-[0]"
-              id="outlined-basic"
-              label="years"
-              type="number"
-              placeholder="years"
-              variant="outlined"
-              onChange={(e) => changeDuration(Number(e.target.value))}
-              InputProps={{
-                inputProps: { min: 0, max: maxYearsToRegister },
-              }}
-              defaultValue={duration}
-              color="secondary"
-              required
-            />
-          </div>
-        </div>
-        <SelectDomain tokenId={tokenId} changeTokenId={changeTokenId} />
-        <div className={styles.cardCenter}>
-          <p className="text">
-            Price:&nbsp;
-            <span className="font-semibold text-brown">
-              {Math.round(Number(price) * 0.000000000000000001 * 10000) / 10000}{" "}
-              ETH
-            </span>
-          </p>
-        </div>
         <div className="flex justify-center content-center w-full">
           <div className="text-beige m-1 mt-5">
             <Button
-              onClick={() => {
-                const foundDomain = domainList.find(
-                  (_domain) => _domain.name === domain
-                );
-                if (foundDomain) return;
-
-                setDomainList(() => {
-                  const newDomainList = [...domainList];
-                  newDomainList.push({
-                    name: domain,
-                    duration,
-                    tokenId,
-                  });
-                  return newDomainList;
-                });
-                setCurrentDomain({ name: domain, duration, tokenId });
-              }}
+              onClick={() =>
+                execute().then(() =>
+                  setDomainsMinting((prev) =>
+                    new Map(prev).set(encodedDomain.toString(), true)
+                  )
+                )
+              }
               disabled={
                 (domainsMinting.get(encodedDomain.toString()) as boolean) ||
                 !account ||
@@ -405,73 +317,45 @@ const Register: FunctionComponent<RegisterProps> = ({
                 !targetAddress
               }
             >
-              Add To Cart
+              Batch Register
             </Button>
           </div>
-          {!isBatchRegister && (
-            <>
-              <div className="text-beige m-1 mt-5">
-                <Button
-                  onClick={() =>
-                    execute().then(() =>
-                      setDomainsMinting((prev) =>
-                        new Map(prev).set(encodedDomain.toString(), true)
-                      )
-                    )
-                  }
-                  disabled={
-                    (domainsMinting.get(encodedDomain.toString()) as boolean) ||
-                    !account ||
-                    !duration ||
-                    duration < 1 ||
-                    !targetAddress
-                  }
-                >
-                  Register from L2
-                </Button>
-              </div>
-              <div className="text-beige m-1 mt-5">
-                {!L1Signer && (
-                  <Button
-                    onClick={() => {
-                      L1connect();
-                    }}
-                    disabled={
-                      (domainsMinting.get(
-                        encodedDomain.toString()
-                      ) as boolean) ||
-                      !account ||
-                      !duration ||
-                      duration < 1 ||
-                      !targetAddress
-                    }
-                  >
-                    Connect to L1
-                  </Button>
-                )}
-                {L1Signer && (
-                  <Button
-                    onClick={() => {
-                      L1register();
-                    }}
-                    disabled={
-                      (domainsMinting.get(
-                        encodedDomain.toString()
-                      ) as boolean) ||
-                      !account ||
-                      !duration ||
-                      duration < 1 ||
-                      !targetAddress ||
-                      !tokenId ||
-                      !isStarkRootDomain(domain.concat(".stark"))
-                    }
-                  >
-                    Register from L1
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
+          {/* <div className="text-beige m-1 mt-5">
+            {!L1Signer && (
+              <Button
+                onClick={() => {
+                  L1connect();
+                }}
+                disabled={
+                  (domainsMinting.get(encodedDomain.toString()) as boolean) ||
+                  !account ||
+                  !duration ||
+                  duration < 1 ||
+                  !targetAddress
+                }
+              >
+                Connect to L1
+              </Button>
+            )}
+            {L1Signer && (
+              <Button
+                onClick={() => {
+                  L1register();
+                }}
+                disabled={
+                  (domainsMinting.get(encodedDomain.toString()) as boolean) ||
+                  !account ||
+                  !duration ||
+                  duration < 1 ||
+                  !targetAddress ||
+                  !tokenId ||
+                  !isStarkRootDomain(domain.concat(".stark"))
+                }
+              >
+                Register from L1
+              </Button>
+            )}
+          </div> */}
         </div>
       </div>
     );
@@ -479,4 +363,4 @@ const Register: FunctionComponent<RegisterProps> = ({
   return <p>This domain is not available you can&rsquo;t register it</p>;
 };
 
-export default Register;
+export default BatchRegister;
