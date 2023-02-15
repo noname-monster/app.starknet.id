@@ -7,6 +7,7 @@ import { ThemeProvider } from "@mui/material";
 import theme from "../styles/theme";
 import { InjectedConnector, StarknetProvider } from "@starknet-react/core";
 import { Analytics } from "@vercel/analytics/react";
+import { DomainContextProvider } from "../hooks/useDomainContext";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const connectors = [
@@ -20,10 +21,15 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ThemeProvider theme={theme}>
           <Head>
             <title>Starknet.id</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1"
+            />
           </Head>
           <Navbar />
-          <Component {...pageProps} />
+          <DomainContextProvider>
+            <Component {...pageProps} />
+          </DomainContextProvider>
         </ThemeProvider>
         <Analytics />
       </StarknetProvider>

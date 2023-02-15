@@ -18,6 +18,7 @@ import L1buying_abi from "../../abi/L1/L1Buying_abi.json";
 import SelectDomain from "./selectDomains";
 import { Call } from "starknet";
 import { useDisplayName } from "../../hooks/displayName.tsx";
+import { useDomainContext } from "../../hooks/useDomainContext";
 
 type RegisterProps = {
   domain: string;
@@ -46,6 +47,7 @@ const Register: FunctionComponent<RegisterProps> = ({
     calls: callData as any,
   });
   const hasMainDomain = !useDisplayName(address).startsWith("0x");
+  const { domainList, setDomainList } = useDomainContext();
 
   const [domainsMinting, setDomainsMinting] = useState<Map<string, boolean>>(
     new Map()
@@ -374,6 +376,20 @@ const Register: FunctionComponent<RegisterProps> = ({
           </p>
         </div>
         <div className="flex justify-center content-center w-full">
+          <div className="text-beige m-1 mt-5">
+            <Button
+              onClick={() => console.log(domainList)}
+              disabled={
+                (domainsMinting.get(encodedDomain.toString()) as boolean) ||
+                !account ||
+                !duration ||
+                duration < 1 ||
+                !targetAddress
+              }
+            >
+              Add To Cart
+            </Button>
+          </div>
           <div className="text-beige m-1 mt-5">
             <Button
               onClick={() =>

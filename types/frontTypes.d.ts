@@ -20,3 +20,9 @@ type ErrorRequestData = {
   status: Status;
   error: string;
 };
+
+type Domain = {
+  name: string;
+  duration: number;
+  tokenId: number;
+};
