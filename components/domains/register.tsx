@@ -47,7 +47,9 @@ const Register: FunctionComponent<RegisterProps> = ({
     calls: callData as any,
   });
   const hasMainDomain = !useDisplayName(address).startsWith("0x");
-  const { domainList, setDomainList } = useDomainContext();
+  const { domainList, setDomainList, currentDomain, setCurrentDomain } =
+    useDomainContext();
+  const isBatchRegister = domainList.length > 0;
 
   const [domainsMinting, setDomainsMinting] = useState<Map<string, boolean>>(
     new Map()
@@ -378,7 +380,18 @@ const Register: FunctionComponent<RegisterProps> = ({
         <div className="flex justify-center content-center w-full">
           <div className="text-beige m-1 mt-5">
             <Button
-              onClick={() => console.log(domainList)}
+              onClick={() => {
+                setDomainList(() => {
+                  const newDomainList = [...domainList];
+                  newDomainList.push({
+                    name: domain,
+                    duration,
+                    tokenId,
+                  });
+                  return newDomainList;
+                });
+                setCurrentDomain({ name: domain, duration, tokenId });
+              }}
               disabled={
                 (domainsMinting.get(encodedDomain.toString()) as boolean) ||
                 !account ||
@@ -390,62 +403,70 @@ const Register: FunctionComponent<RegisterProps> = ({
               Add To Cart
             </Button>
           </div>
-          <div className="text-beige m-1 mt-5">
-            <Button
-              onClick={() =>
-                execute().then(() =>
-                  setDomainsMinting((prev) =>
-                    new Map(prev).set(encodedDomain.toString(), true)
-                  )
-                )
-              }
-              disabled={
-                (domainsMinting.get(encodedDomain.toString()) as boolean) ||
-                !account ||
-                !duration ||
-                duration < 1 ||
-                !targetAddress
-              }
-            >
-              Register from L2
-            </Button>
-          </div>
-          <div className="text-beige m-1 mt-5">
-            {!L1Signer && (
-              <Button
-                onClick={() => {
-                  L1connect();
-                }}
-                disabled={
-                  (domainsMinting.get(encodedDomain.toString()) as boolean) ||
-                  !account ||
-                  !duration ||
-                  duration < 1 ||
-                  !targetAddress
-                }
-              >
-                Connect to L1
-              </Button>
-            )}
-            {L1Signer && (
-              <Button
-                onClick={() => {
-                  L1register();
-                }}
-                disabled={
-                  (domainsMinting.get(encodedDomain.toString()) as boolean) ||
-                  !account ||
-                  !duration ||
-                  duration < 1 ||
-                  !targetAddress ||
-                  !tokenId ||
-                  !isStarkRootDomain(domain.concat(".stark"))
-                }
-              >
-                Register from L1
-              </Button>
-            )}
-          </div>
+          {!isBatchRegister && (
+            <>
+              <div className="text-beige m-1 mt-5">
+                <Button
+                  onClick={() =>
+                    execute().then(() =>
+                      setDomainsMinting((prev) =>
+                        new Map(prev).set(encodedDomain.toString(), true)
+                      )
+                    )
+                  }
+                  disabled={
+                    (domainsMinting.get(encodedDomain.toString()) as boolean) ||
+                    !account ||
+                    !duration ||
+                    duration < 1 ||
+                    !targetAddress
+                  }
+                >
+                  Register from L2
+                </Button>
+              </div>
+              <div className="text-beige m-1 mt-5">
+                {!L1Signer && (
+                  <Button
+                    onClick={() => {
+                      L1connect();
+                    }}
+                    disabled={
+                      (domainsMinting.get(
+                        encodedDomain.toString()
+                      ) as boolean) ||
+                      !account ||
+                      !duration ||
+                      duration < 1 ||
+                      !targetAddress
+                    }
+                  >
+                    Connect to L1
+                  </Button>
+                )}
+                {L1Signer && (
+                  <Button
+                    onClick={() => {
+                      L1register();
+                    }}
+                    disabled={
+                      (domainsMinting.get(
+                        encodedDomain.toString()
+                      ) as boolean) ||
+                      !account ||
+                      !duration ||
+                      duration < 1 ||
+                      !targetAddress ||
+                      !tokenId ||
+                      !isStarkRootDomain(domain.concat(".stark"))
+                    }
+                  >
+                    Register from L1
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     );

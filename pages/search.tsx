@@ -10,6 +10,9 @@ import DomainMenu from "../components/domains/domainMenu";
 import { useExpiryFromDomain } from "../hooks/naming";
 import { is1234Domain, isStarkRootDomain } from "../utils/stringService";
 import { useAccount } from "@starknet-react/core";
+import { useDomainContext } from "../hooks/useDomainContext";
+import DomainList from "../components/domains/domainList";
+import Grid from "@mui/material/Grid";
 
 const SearchPage: NextPage = () => {
   const router = useRouter();
@@ -20,6 +23,7 @@ const SearchPage: NextPage = () => {
     undefined
   );
   const { expiry: data, error } = useExpiryFromDomain(domain);
+  const { domainList } = useDomainContext();
 
   useEffect(() => {
     if (
@@ -69,8 +73,29 @@ const SearchPage: NextPage = () => {
             />
           )}
         </div>
+        {domainList.length > 0 && (
+          <div className="sm:w-2/3 w-4/5 mt-5">
+            <div className={styles.card}>
+              <Grid container spacing={4}>
+                <Grid item xs={5}>
+                  <DomainList />
+                </Grid>
+                <Grid item xs={6}>
+                  {isMenuVisible ? (
+                    <>
+                      <DomainMenu
+                        isAvailable={isAvailable}
+                        domain={domain as string}
+                      />
+                    </>
+                  ) : null}
+                </Grid>
+              </Grid>
+            </div>
+          </div>
+        )}
 
-        {isMenuVisible ? (
+        {isMenuVisible && domainList.length === 0 ? (
           <DomainMenu isAvailable={isAvailable} domain={domain as string} />
         ) : null}
       </div>
