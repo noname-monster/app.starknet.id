@@ -10,6 +10,7 @@ import {
 import { useAccount } from "@starknet-react/core";
 import React, { FunctionComponent, useEffect, useState } from "react";
 import { hexToDecimal } from "../../utils/feltService";
+import { useDomainContext } from "../../hooks/useDomainContext";
 
 type SelectDomainProps = {
   tokenId: number;
@@ -24,6 +25,7 @@ const SelectDomain: FunctionComponent<SelectDomainProps> = ({
 }) => {
   const { account } = useAccount();
   const [ownedIdentities, setOwnedIdentities] = useState<number[] | []>([]);
+  const { domainList } = useDomainContext();
 
   useEffect(() => {
     if (account) {
@@ -55,6 +57,7 @@ const SelectDomain: FunctionComponent<SelectDomainProps> = ({
         <Select
           value={tokenId}
           defaultValue={ownedIdentities[0]}
+          disabled={domainList.length > 0}
           label="Starknet.id"
           onChange={(e) => changeTokenId(Number(e.target.value))}
           sx={{

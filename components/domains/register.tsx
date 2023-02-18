@@ -48,8 +48,8 @@ const Register: FunctionComponent<RegisterProps> = ({
     calls: callData as any,
   });
   const hasMainDomain = !useDisplayName(address).startsWith("0x");
-  const { domainList, setDomainList, currentDomain, setCurrentDomain } =
-    useDomainContext();
+
+  const { domainList, setDomainList, setCurrentDomain } = useDomainContext();
   const isBatchRegister = domainList.length > 0;
 
   const [domainsMinting, setDomainsMinting] = useState<Map<string, boolean>>(
@@ -344,6 +344,7 @@ const Register: FunctionComponent<RegisterProps> = ({
               id="outlined-basic"
               value={targetAddress ?? "0x.."}
               variant="outlined"
+              disabled={isBatchRegister}
               onChange={(e) => changeAddress(e.target.value)}
               color="secondary"
               required
@@ -357,6 +358,7 @@ const Register: FunctionComponent<RegisterProps> = ({
               label="years"
               type="number"
               placeholder="years"
+              disabled={isBatchRegister}
               variant="outlined"
               onChange={(e) => changeDuration(Number(e.target.value))}
               InputProps={{
@@ -393,10 +395,11 @@ const Register: FunctionComponent<RegisterProps> = ({
                     name: domain,
                     duration,
                     tokenId,
+                    price,
                   });
                   return newDomainList;
                 });
-                setCurrentDomain({ name: domain, duration, tokenId });
+                setCurrentDomain({ name: domain, duration, tokenId, price });
               }}
               disabled={
                 (domainsMinting.get(encodedDomain.toString()) as boolean) ||

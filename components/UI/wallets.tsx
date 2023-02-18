@@ -56,6 +56,8 @@ const Wallets: FunctionComponent<WalletsProps> = ({
         <p className={styles.menu_title}>You need a Starknet wallet</p>
         {connectors.map((connector) => {
           if (connector.available()) {
+            console.log(connector.id());
+
             return (
               <div className="mt-5 flex justify-center" key={connector.id()}>
                 <Button onClick={() => connectWallet(connector)}>

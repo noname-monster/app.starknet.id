@@ -22,6 +22,7 @@ export default function DomainList() {
   const [selectedIndex, setSelectedIndex] = React.useState(1);
   const { domainList, setDomainList } = useDomainContext();
 
+  console.log({ domainList });
   const handleListItemClick = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
     index: number

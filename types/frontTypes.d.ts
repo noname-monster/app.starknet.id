@@ -25,4 +25,5 @@ type Domain = {
   name: string;
   duration: number;
   tokenId: number;
+  price: string;
 };
