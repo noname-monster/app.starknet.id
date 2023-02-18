@@ -7,12 +7,14 @@ import MainIcon from "../UI/iconsComponents/icons/mainIcon";
 import { useEncodedSeveral } from "../../hooks/naming";
 import { useAccount, useStarknetExecute } from "@starknet-react/core";
 import ChangeAddressModal from "./actions/changeAddressModal";
-import { getDomainWithoutStark, hexToDecimal } from "../../utils/stringService";
+import { getDomainWithoutStark } from "../../utils/stringService";
 import TransferFormModal from "./actions/transferFormModal";
 import SubdomainModal from "./actions/subdomainModal";
 import RenewalModal from "./actions/renewalModal";
 import SocialMediaActions from "./actions/socialmediaActions";
 import { Identity } from "../../types/backTypes";
+import { hexToDecimal } from "../../utils/feltService";
+import IdentitiesActionsSkeleton from "../UI/identitiesActionsSkeleton";
 
 type IdentityActionsProps = {
   identity?: Identity;
@@ -36,6 +38,7 @@ const IdentityActions: FunctionComponent<IdentityActionsProps> = ({
   );
   const isAccountTargetAddress = identity?.addr === hexToDecimal(address);
   const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false)
 
   // Add all subdomains to the parameters
   const callDataEncodedDomain: (number | string)[] = [encodedDomains.length];
@@ -79,6 +82,7 @@ const IdentityActions: FunctionComponent<IdentityActionsProps> = ({
     }
 
     if (address && tokenId) {
+    setLoading(true)
       // Our Indexer
       fetch(
         `${
@@ -90,11 +94,14 @@ const IdentityActions: FunctionComponent<IdentityActionsProps> = ({
         .then((response) => response.json())
         .then((data) => {
           setIsOwner(checkIfOwner(data.full_ids));
+          setLoading(false)
         });
-    }
+      }
   }, [address, tokenId]);
 
   return (
+    <>
+    {loading ? <IdentitiesActionsSkeleton/> :
     <>
       <>
         <SocialMediaActions
@@ -229,6 +236,8 @@ const IdentityActions: FunctionComponent<IdentityActionsProps> = ({
         domain={identity?.domain}
       />
     </>
+    }
+</>
   );
 };
 

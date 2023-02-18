@@ -13,10 +13,12 @@ import { useRouter } from "next/router";
 import LoadingScreen from "../components/UI/screens/loadingScreen";
 import ErrorScreen from "../components/UI/screens/errorScreen";
 import SuccessScreen from "../components/UI/screens/successScreen";
-import { hexToDecimal } from "../utils/stringService";
+import { hexToDecimal } from "../utils/feltService";
+import IdentitiesSkeleton from "../components/UI/identitiesSkeleton";
 
 const Identities: NextPage = () => {
   const { address } = useAccount();
+  const [loading, setLoading] = useState<boolean>(false);
   const [ownedIdentities, setOwnedIdentities] = useState<FullId[]>([]);
   const [rightTokenId, setRightTokenId] = useState<number | undefined>(
     undefined
@@ -56,6 +58,7 @@ const Identities: NextPage = () => {
         .then((response) => response.json())
         .then((data) => {
           setOwnedIdentities(data.full_ids);
+          setLoading(false);
         });
 
       // // Aspect Indexer
@@ -84,7 +87,11 @@ const Identities: NextPage = () => {
             <>
               <h1 className="title">Your Starknet identities</h1>
               <div className={styles.containerGallery}>
-                <IdentitiesGallery identities={ownedIdentities} />
+                {loading ? (
+                  <IdentitiesSkeleton />
+                ) : (
+                  <IdentitiesGallery identities={ownedIdentities} />
+                )}
                 <MintIdentity onClick={() => mint()} />
               </div>
             </>
